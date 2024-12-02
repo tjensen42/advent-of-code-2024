@@ -8,20 +8,15 @@ fn process_input(input: &str) -> usize {
     let mut list2: Vec<usize> = vec![];
 
     for line in input.lines() {
-        let splitted: Vec<_> = line.split_whitespace().collect();
-        list1.push(splitted[0].parse().unwrap());
-        list2.push(splitted[1].parse().unwrap());
+        let line_split: Vec<_> = line.split_whitespace().collect();
+        list1.push(line_split[0].parse().unwrap());
+        list2.push(line_split[1].parse().unwrap());
     }
 
     list1.sort();
     list2.sort();
 
-    let mut sum = 0;
-    for (i, j) in list1.iter().zip(list2) {
-        sum += i.abs_diff(j);
-    }
-
-    sum
+    list1.iter().zip(list2).map(|(a, b)| a.abs_diff(b)).sum()
 }
 
 #[cfg(test)]
