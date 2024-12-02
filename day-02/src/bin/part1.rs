@@ -5,19 +5,26 @@ fn main() {
 
 fn process_input(input: &str) -> usize {
     let mut sum = 0;
-    for line in input.lines()
-    {
-        let report: Vec<usize> = line.split_whitespace().map(|x| x.parse().unwrap()).collect();
-        if report.windows(2).all(|x| x[0] < x[1] && x[0].abs_diff(x[1]) < 4)
-        {
-            sum += 1;
-        }
-        else if report.windows(2).all(|x| x[0] > x[1] && x[0].abs_diff(x[1]) < 4)
-        {
+    for line in input.lines() {
+        let report: Vec<usize> = line
+            .split_whitespace()
+            .map(|x| x.parse().unwrap())
+            .collect();
+        if report_is_valid(&report) {
             sum += 1;
         }
     }
     sum
+}
+
+fn report_is_valid(report: &[usize]) -> bool {
+    let mut windows = report.windows(2);
+    if windows.all(|x| x[0] < x[1] && x[0].abs_diff(x[1]) < 4)
+        || windows.all(|x| x[0] > x[1] && x[0].abs_diff(x[1]) < 4)
+    {
+        return true;
+    }
+    false
 }
 
 #[cfg(test)]
