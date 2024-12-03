@@ -7,19 +7,17 @@ fn main() {
 
 fn process_input(input: &str) -> usize {
     let re = Regex::new(r"(mul\([0-9]+,[0-9]+\)|do\(\)|don't\(\))").unwrap();
-    let ops = re.find_iter(input).map(|m| Operation::from(m.as_str()));
+    let ops = re.find_iter(input).map(|m| m.as_str());
 
-    process_ops(ops, 0)
-}
-
-fn process_ops(ops: impl Iterator<Item = Operation>, mut sum: usize) -> usize {
+    let mut sum = 0;
     let mut do_mul = true;
 
     for op in ops {
         match op {
-            Operation::Do => do_mul = true,
-            Operation::Dont => do_mul = false,
-            Operation::Mul(a, b) => {
+            "do()" => do_mul = true,
+            "don't()" => do_mul = false,
+            _ => {
+                let (a, b) = parse_op_mul(op);
                 if do_mul {
                     sum += a * b;
                 }
@@ -28,26 +26,6 @@ fn process_ops(ops: impl Iterator<Item = Operation>, mut sum: usize) -> usize {
     }
 
     sum
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Operation {
-    Do,
-    Dont,
-    Mul(usize, usize),
-}
-
-impl From<&str> for Operation {
-    fn from(op: &str) -> Self {
-        match op {
-            "do()" => Operation::Do,
-            "don't()" => Operation::Dont,
-            _ => {
-                let (a, b) = parse_op_mul(op);
-                Operation::Mul(a, b)
-            }
-        }
-    }
 }
 
 fn parse_op_mul(mul: &str) -> (usize, usize) {
