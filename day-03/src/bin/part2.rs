@@ -16,12 +16,11 @@ fn process_input(input: &str) -> usize {
         match op {
             "do()" => do_mul = true,
             "don't()" => do_mul = false,
-            _ => {
+            _ if do_mul => {
                 let (a, b) = parse_op_mul(op);
-                if do_mul {
-                    sum += a * b;
-                }
+                sum += a * b;
             }
+            _ => panic!("Invalid operation"),
         }
     }
 
