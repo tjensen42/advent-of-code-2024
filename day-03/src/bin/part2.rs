@@ -20,7 +20,7 @@ fn process_input(input: &str) -> usize {
                 let (a, b) = parse_op_mul(op);
                 sum += a * b;
             }
-            _ => panic!("Invalid operation"),
+            _ => {}
         }
     }
 
