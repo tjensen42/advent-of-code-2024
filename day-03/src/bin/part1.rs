@@ -16,9 +16,7 @@ fn parse_mul(mul: &str) -> (usize, usize) {
     let num_str = mul
         .split(|c: char| !c.is_ascii_digit())
         .filter(|s| !s.is_empty());
-
     let nums: Vec<_> = num_str.map(|num| num.parse().unwrap()).collect();
-
     (nums[0], nums[1])
 }
 

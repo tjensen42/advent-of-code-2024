@@ -12,32 +12,22 @@ fn process_input(input: &str) -> usize {
     process_ops(ops, 0)
 }
 
-fn process_ops(mut ops: impl Iterator<Item = Operation>, mut sum: usize) -> usize {
-    while let Some(op) = ops.next() {
+fn process_ops(ops: impl Iterator<Item = Operation>, mut sum: usize) -> usize {
+    let mut do_mul = true;
+
+    for op in ops {
         match op {
-            Operation::Do => continue,
-            Operation::Dont => {
-                while let Some(next_op) = ops.next() {
-                    if is_not_do(&next_op) {
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-            }
+            Operation::Do => do_mul = true,
+            Operation::Dont => do_mul = false,
             Operation::Mul(a, b) => {
-                sum += a * b;
+                if do_mul {
+                    sum += a * b;
+                }
             }
         }
     }
-    sum
-}
 
-fn is_not_do(op: &Operation) -> bool {
-    match op {
-        Operation::Do => false,
-        _ => true,
-    }
+    sum
 }
 
 #[derive(Debug, Clone, Copy)]
