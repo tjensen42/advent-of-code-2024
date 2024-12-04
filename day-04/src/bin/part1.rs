@@ -18,38 +18,38 @@ fn process_input(input: &str) -> usize {
     // Rows
     sum += grid
         .iter_rows()
-        .map(|c| find_xmas_in_line(&c.collect::<String>()))
+        .map(|c| find_pattern_in_line(&c.collect::<String>()))
         .sum::<usize>();
     sum += grid
         .iter_rows()
-        .map(|c| find_xmas_in_line(&c.rev().collect::<String>()))
+        .map(|c| find_pattern_in_line(&c.rev().collect::<String>()))
         .sum::<usize>();
 
     // Columns
     sum += grid
         .iter_cols()
-        .map(|c| find_xmas_in_line(&c.collect::<String>()))
+        .map(|c| find_pattern_in_line(&c.collect::<String>()))
         .sum::<usize>();
     sum += grid
         .iter_cols()
-        .map(|c| find_xmas_in_line(&c.rev().collect::<String>()))
+        .map(|c| find_pattern_in_line(&c.rev().collect::<String>()))
         .sum::<usize>();
 
     // Diagonals
     let diagonals = get_diagonals(&grid);
     sum += diagonals
         .iter()
-        .map(|d| find_xmas_in_line(d))
+        .map(|d| find_pattern_in_line(d))
         .sum::<usize>();
     sum += diagonals
         .iter()
-        .map(|d| find_xmas_in_line(&d.chars().rev().collect::<String>()))
+        .map(|d| find_pattern_in_line(&d.chars().rev().collect::<String>()))
         .sum::<usize>();
 
     sum
 }
 
-fn find_xmas_in_line(line: &str) -> usize {
+fn find_pattern_in_line(line: &str) -> usize {
     let mut sum = 0;
 
     for i in 0..=line.len() - PATTERN.len() {
