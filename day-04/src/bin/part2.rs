@@ -11,20 +11,20 @@ fn process_input(input: &str) -> usize {
         .lines()
         .for_each(|line| grid.push_row(line.chars().collect()));
 
-    grid.insert_row(0, vec!['0'; grid.cols()]);
-    grid.insert_col(0, vec!['0'; grid.rows()]);
-    grid.push_row(vec!['0'; grid.cols()]);
-    grid.push_col(vec!['0'; grid.rows()]);
-
     let mut sum = 0;
-    for ((row, col), c) in grid.indexed_iter() {
-        if *c == 'A'
-            && ((grid[(row - 1, col - 1)] == 'M' && grid[(row + 1, col + 1)] == 'S')
-                || (grid[(row - 1, col - 1)] == 'S' && grid[(row + 1, col + 1)] == 'M'))
-            && ((grid[(row + 1, col - 1)] == 'M' && grid[(row - 1, col + 1)] == 'S')
-                || (grid[(row + 1, col - 1)] == 'S' && grid[(row - 1, col + 1)] == 'M'))
-        {
-            sum += 1;
+
+    for row in 1..grid.rows() - 1 {
+        for col in 1..grid.cols() - 1 {
+            if grid[(row, col)] == 'A' {
+                let dia1 = [grid[(row - 1, col - 1)], grid[(row + 1, col + 1)]];
+                let dia2 = [grid[(row + 1, col - 1)], grid[(row - 1, col + 1)]];
+
+                if (dia1 == ['M', 'S'] || dia1 == ['S', 'M'])
+                    && (dia2 == ['M', 'S'] || dia2 == ['S', 'M'])
+                {
+                    sum += 1;
+                }
+            }
         }
     }
 
