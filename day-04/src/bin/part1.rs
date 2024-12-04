@@ -36,7 +36,9 @@ fn process_input(input: &str) -> usize {
         .sum::<usize>();
 
     // Diagonals
-    let diagonals = get_diagonals(&grid);
+    let mut diagonals = get_diagonals(&grid);
+    diagonals.retain(|d| d.len() >= PATTERN.len());
+
     sum += diagonals
         .iter()
         .map(|d| find_pattern_in_line(d))
@@ -97,8 +99,6 @@ fn get_diagonals(grid: &Grid<char>) -> Vec<String> {
         }
         diagonals.push(diagonal);
     }
-
-    diagonals.retain(|d| d.len() >= PATTERN.len());
 
     diagonals
 }
