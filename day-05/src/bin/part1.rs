@@ -9,7 +9,7 @@ fn process_input(input: &str) -> usize {
     let section2 = sections.next().unwrap().lines();
 
     let rules: Vec<Vec<usize>> = section1
-        .map(|l| l.split('|').map(|n| n.parse::<usize>().unwrap()).collect())
+        .map(|l| l.split('|').map(|n| n.parse().unwrap()).collect())
         .collect();
     let page_nums: Vec<Vec<usize>> = section2
         .map(|l| l.split(',').map(|n| n.parse().unwrap()).collect())
@@ -17,7 +17,7 @@ fn process_input(input: &str) -> usize {
 
     let mut sum = 0;
     for pages in &page_nums {
-        if rules.iter().all(|r| list_is_valid(&pages, (r[0], r[1]))) {
+        if rules.iter().all(|r| list_is_valid(pages, (r[0], r[1]))) {
             sum += pages[(pages.len() - 1) / 2];
         }
     }

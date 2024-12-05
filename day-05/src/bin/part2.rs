@@ -9,7 +9,7 @@ fn process_input(input: &str) -> usize {
     let section2 = sections.next().unwrap().lines();
 
     let rules: Vec<Vec<usize>> = section1
-        .map(|l| l.split('|').map(|n| n.parse::<usize>().unwrap()).collect())
+        .map(|l| l.split('|').map(|n| n.parse().unwrap()).collect())
         .collect();
     let mut page_nums: Vec<Vec<usize>> = section2
         .map(|l| l.split(',').map(|n| n.parse().unwrap()).collect())
