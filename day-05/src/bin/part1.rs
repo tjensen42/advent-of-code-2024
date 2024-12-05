@@ -16,19 +16,16 @@ fn process_input(input: &str) -> usize {
         .collect();
 
     let mut sum = 0;
-    for page_list in &page_nums {
-        if rules
-            .iter()
-            .all(|r| list_applies_to_rule(&page_list, (r[0], r[1])))
-        {
-            sum += page_list[(page_list.len() - 1) / 2];
+    for pages in &page_nums {
+        if rules.iter().all(|r| list_is_valid(&pages, (r[0], r[1]))) {
+            sum += pages[(pages.len() - 1) / 2];
         }
     }
 
     sum
 }
 
-fn list_applies_to_rule(list: &[usize], rule: (usize, usize)) -> bool {
+fn list_is_valid(list: &[usize], rule: (usize, usize)) -> bool {
     let Some(pos1) = list.iter().position(|n| *n == rule.0) else {
         return true;
     };
