@@ -11,13 +11,13 @@ fn process_input(input: &str) -> usize {
     let rules: Vec<Vec<usize>> = section1
         .map(|l| l.split('|').map(|n| n.parse().unwrap()).collect())
         .collect();
-    let page_nums: Vec<Vec<usize>> = section2
+    let updates: Vec<Vec<usize>> = section2
         .map(|l| l.split(',').map(|n| n.parse().unwrap()).collect())
         .collect();
 
     let mut sum = 0;
-    for pages in &page_nums {
-        if rules.iter().all(|r| list_is_valid(pages, (r[0], r[1]))) {
+    for pages in &updates {
+        if rules.iter().all(|r| update_is_valid(pages, (r[0], r[1]))) {
             sum += pages[(pages.len() - 1) / 2];
         }
     }
@@ -25,11 +25,11 @@ fn process_input(input: &str) -> usize {
     sum
 }
 
-fn list_is_valid(list: &[usize], rule: (usize, usize)) -> bool {
-    let Some(pos1) = list.iter().position(|n| *n == rule.0) else {
+fn update_is_valid(update: &[usize], rule: (usize, usize)) -> bool {
+    let Some(pos1) = update.iter().position(|&p| p == rule.0) else {
         return true;
     };
-    let Some(pos2) = list.iter().position(|n| *n == rule.1) else {
+    let Some(pos2) = update.iter().position(|&p| p == rule.1) else {
         return true;
     };
 

@@ -11,47 +11,47 @@ fn process_input(input: &str) -> usize {
     let rules: Vec<Vec<usize>> = section1
         .map(|l| l.split('|').map(|n| n.parse().unwrap()).collect())
         .collect();
-    let mut page_nums: Vec<Vec<usize>> = section2
+    let mut updates: Vec<Vec<usize>> = section2
         .map(|l| l.split(',').map(|n| n.parse().unwrap()).collect())
         .collect();
 
-    page_nums.retain(|x| !rules.iter().all(|r| list_is_valid(x, (r[0], r[1]))));
+    updates.retain(|x| !rules.iter().all(|r| update_is_valid(x, (r[0], r[1]))));
 
     loop {
         for rule in &rules {
-            for pages in &mut page_nums {
-                apply_rule_on_list(pages, (rule[0], rule[1]));
+            for pages in &mut updates {
+                apply_rule_on_update(pages, (rule[0], rule[1]));
             }
         }
-        if page_nums
+        if updates
             .iter()
-            .all(|x| rules.iter().all(|r| list_is_valid(x, (r[0], r[1]))))
+            .all(|x| rules.iter().all(|r| update_is_valid(x, (r[0], r[1]))))
         {
             break;
         }
     }
 
-    page_nums.iter().map(|x| x[(x.len() - 1) / 2]).sum()
+    updates.iter().map(|x| x[(x.len() - 1) / 2]).sum()
 }
 
-fn apply_rule_on_list(list: &mut [usize], rule: (usize, usize)) {
-    let Some(pos1) = list.iter().position(|n| *n == rule.0) else {
+fn apply_rule_on_update(update: &mut [usize], rule: (usize, usize)) {
+    let Some(pos1) = update.iter().position(|&p| p == rule.0) else {
         return;
     };
-    let Some(pos2) = list.iter().position(|n| *n == rule.1) else {
+    let Some(pos2) = update.iter().position(|&p| p == rule.1) else {
         return;
     };
 
     if pos1 > pos2 {
-        list.swap(pos1, pos2);
+        update.swap(pos1, pos2);
     }
 }
 
-fn list_is_valid(list: &[usize], rule: (usize, usize)) -> bool {
-    let Some(pos1) = list.iter().position(|n| *n == rule.0) else {
+fn update_is_valid(update: &[usize], rule: (usize, usize)) -> bool {
+    let Some(pos1) = update.iter().position(|&p| p == rule.0) else {
         return true;
     };
-    let Some(pos2) = list.iter().position(|n| *n == rule.1) else {
+    let Some(pos2) = update.iter().position(|&p| p == rule.1) else {
         return true;
     };
 
