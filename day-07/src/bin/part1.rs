@@ -8,12 +8,12 @@ fn main() {
 }
 
 fn process_input(input: &str) -> usize {
-    let equations: Vec<_> = input
+    input
         .lines()
         .map(|line| {
-            let mut equation = line.split(": ");
-            let test_value: usize = equation.next().unwrap().parse().unwrap();
-            let remaining: Vec<usize> = equation
+            let mut parts = line.split(": ");
+            let test_value = parts.next().unwrap().parse().unwrap();
+            let remaining = parts
                 .next()
                 .unwrap()
                 .split_whitespace()
@@ -21,29 +21,27 @@ fn process_input(input: &str) -> usize {
                 .collect();
             (test_value, remaining)
         })
-        .collect();
-
-    equations
-        .into_iter()
         .filter(equation_can_be_made_true)
         .map(|(test_value, _)| test_value)
         .sum()
 }
 
 fn equation_can_be_made_true(equation: &(usize, Vec<usize>)) -> bool {
+    let (test_value, numbers) = equation;
+
     for ops in repeat(['+', '*'].iter())
-        .take(equation.1.len() - 1)
+        .take(numbers.len() - 1)
         .multi_cartesian_product()
     {
-        let mut value = equation.1[0];
-        for (i, &op) in ops.iter().enumerate() {
+        let mut value = numbers[0];
+        for (i, op) in ops.iter().enumerate() {
             match op {
-                '+' => value += equation.1[i + 1],
-                '*' => value *= equation.1[i + 1],
+                '+' => value += numbers[i + 1],
+                '*' => value *= numbers[i + 1],
                 _ => unreachable!(),
             }
         }
-        if value == equation.0 {
+        if value == *test_value {
             return true;
         }
     }
