@@ -31,12 +31,11 @@ fn process_input(input: &str) -> usize {
             let free_space_idx = find_first_free_space(&layout, block_size);
             if let Some(free_space_idx) = free_space_idx {
                 if free_space_idx < block_idx {
-                    layout.remove(block_idx);
-                    layout.insert(block_idx, MemBlock::None(block_size));
-                    layout.insert(free_space_idx, MemBlock::Some(id, block_size));
-                    if let MemBlock::None(free_size) = layout[free_space_idx + 1] {
-                        layout[free_space_idx + 1] = MemBlock::None(free_size - block_size);
+                    layout[block_idx] = MemBlock::None(block_size);
+                    if let MemBlock::None(free_size) = layout[free_space_idx] {
+                        layout[free_space_idx] = MemBlock::None(free_size - block_size);
                     }
+                    layout.insert(free_space_idx, MemBlock::Some(id, block_size));
                 }
             }
         }
@@ -52,8 +51,6 @@ fn process_input(input: &str) -> usize {
         })
         .flatten()
         .collect::<Vec<_>>();
-
-    println!("{:?}", filesystem);
 
     let mut sum = 0;
     for (i, x) in filesystem.iter().enumerate() {
