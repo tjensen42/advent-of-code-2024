@@ -15,7 +15,7 @@ fn process_input(input: &str) -> usize {
 
     let mut antennas: HashMap<char, Vec<(usize, usize)>> = HashMap::new();
     for (pos, c) in grid.indexed_iter() {
-        if *c != '.' {
+        if *c != '.' && *c != '#' {
             if let Some(poses) = antennas.get_mut(c) {
                 poses.push(pos);
             } else {
@@ -27,18 +27,10 @@ fn process_input(input: &str) -> usize {
     let mut antinodes = HashSet::new();
     for (_, positions) in antennas {
         for combo in positions.iter().combinations(2) {
-            println!("{:?}", combo);
-            let antinode_pos = calculate_antinodes_positions(*combo[0], *combo[1]);
-            antinodes.insert(antinode_pos.0);
-            antinodes.insert(antinode_pos.1);
+            let antinode_pos = calculate_antinodes_positions(*combo[0], *combo[1], &grid);
+            antinodes.extend(antinode_pos);
         }
     }
-    // println!("{:?}", antinodes);
-
-    antinodes
-        .retain(|&(x, y)| x >= 0 && x < grid.rows() as isize && y >= 0 && y < grid.cols() as isize);
-
-    // println!("{:?}", antinodes);
 
     antinodes.len()
 }
@@ -46,42 +38,30 @@ fn process_input(input: &str) -> usize {
 fn calculate_antinodes_positions(
     pos1: (usize, usize),
     pos2: (usize, usize),
-) -> ((isize, isize), (isize, isize)) {
+    grid: &Grid<char>,
+) -> Vec<(usize, usize)> {
     let diff_x = pos1.0 as isize - pos2.0 as isize;
     let diff_y = pos1.1 as isize - pos2.1 as isize;
 
-    if diff_x > 0 && diff_y > 0 {
-        // println!("{} {}", diff_x, diff_y);
-        (
-            (
-                pos1.0 as isize - diff_x.abs(),
-                pos1.1 as isize - diff_y.abs(),
-            ),
-            (
-                pos2.0 as isize + diff_x.abs(),
-                pos2.1 as isize + diff_y.abs(),
-            ),
-        )
-    } else {
-        // println!("{} {}", diff_x, diff_y);
-        (
-            (
-                pos1.0 as isize + diff_x.abs(),
-                pos1.1 as isize + diff_y.abs(),
-            ),
-            (
-                pos2.0 as isize - diff_x.abs(),
-                pos2.1 as isize - diff_y.abs(),
-            ),
-        )
+    let mut positions = Vec::new();
+
+    let (x, y) = (
+        pos1.0 as isize + diff_x as isize,
+        pos1.1 as isize + diff_y as isize,
+    );
+    if x >= 0 && x < grid.rows() as isize && y >= 0 && y < grid.cols() as isize {
+        positions.push((x as usize, y as usize));
     }
 
-    // // let mut antinode1 =
+    let (x, y) = (
+        pos2.0 as isize - diff_x as isize,
+        pos2.1 as isize - diff_y as isize,
+    );
+    if x >= 0 && x < grid.rows() as isize && y >= 0 && y < grid.cols() as isize {
+        positions.push((x as usize, y as usize));
+    }
 
-    // (
-    //     (pos1.0 as isize + diff_x, pos1.1 as isize + diff_y),
-    //     (pos2.0 as isize + diff_x, pos2.1 as isize + diff_y),
-    // )
+    positions
 }
 
 #[cfg(test)]
