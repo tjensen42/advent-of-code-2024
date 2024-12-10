@@ -8,23 +8,18 @@ fn main() {
 fn process_input(input: &str) -> usize {
     let mut map: Grid<u32> = Grid::new(input.lines().count(), 0);
 
-    for line in input.lines() {
+    input.lines().for_each(|line| {
         map.push_row(line.chars().map(|c| c.to_digit(10).unwrap()).collect());
-    }
+    });
 
     map.insert_row(0, vec![u32::MAX; map.cols()]);
     map.insert_col(0, vec![u32::MAX; map.rows()]);
     map.push_row(vec![u32::MAX; map.cols()]);
     map.push_col(vec![u32::MAX; map.rows()]);
 
-    let trailheads: Vec<_> = map
-        .indexed_iter()
+    map.indexed_iter()
         .filter_map(|(pos, &c)| if c == 0 { Some(pos) } else { None })
-        .collect();
-
-    trailheads
-        .iter()
-        .map(|&pos| find_distinct_hiking_trails(&map, pos))
+        .map(|trailhead| find_distinct_hiking_trails(&map, trailhead))
         .sum()
 }
 
