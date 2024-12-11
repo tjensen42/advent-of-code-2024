@@ -30,9 +30,9 @@ fn stones_count_after_blinks(
         return count;
     }
 
-    let count;
-    let digits = count_digits_of_num(stone);
+    let digits = (0..).take_while(|n| 10_usize.pow(*n) <= stone).count();
 
+    let count;
     if stone == 0 {
         count = stones_count_after_blinks(1, blinks_left - 1, cache);
     } else if digits % 2 == 0 {
@@ -45,11 +45,7 @@ fn stones_count_after_blinks(
 
     cache.insert((stone, blinks_left), count);
 
-    return count;
-}
-
-fn count_digits_of_num(num: usize) -> usize {
-    (0..).take_while(|n| 10_usize.pow(*n) <= num).count()
+    count
 }
 
 fn split_num(num: usize, digits: usize) -> (usize, usize) {
