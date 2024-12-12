@@ -12,23 +12,25 @@ fn main() {
 }
 
 fn process_input(input: &str) -> usize {
-    let mut garden: Grid<char> = Grid::new(0, 0);
-    input
-        .lines()
-        .for_each(|l| garden.push_row(l.chars().collect()));
+    let mut garden = Grid::new(0, 0);
 
+    for line in input.lines() {
+        garden.push_row(line.chars().collect());
+    }
+
+    // Add boundaries
     garden.insert_row(0, vec![char::MAX; garden.cols()]);
-    garden.insert_col(0, vec![char::MAX; garden.rows()]);
     garden.push_row(vec![char::MAX; garden.cols()]);
+    garden.insert_col(0, vec![char::MAX; garden.rows()]);
     garden.push_col(vec![char::MAX; garden.rows()]);
 
-    let mut visited_garden_plots: HashSet<(usize, usize)> = HashSet::new();
-    let mut regions = vec![];
+    let mut visited = HashSet::<(usize, usize)>::new();
+    let mut regions = Vec::new();
 
-    for (pos, _) in garden.indexed_iter() {
-        if garden[pos] != char::MAX && !visited_garden_plots.contains(&pos) {
+    for (pos, &cell) in garden.indexed_iter() {
+        if cell != char::MAX && !visited.contains(&pos) {
             let region = flood_fill_region(&garden, pos);
-            visited_garden_plots.extend(region.cells.keys());
+            visited.extend(region.cells.keys());
             regions.push(region);
         }
     }
@@ -37,31 +39,23 @@ fn process_input(input: &str) -> usize {
 }
 
 fn flood_fill_region(garden: &Grid<char>, start_pos: (usize, usize)) -> Region {
-    let mut region = Region {
-        cells: HashMap::new(),
-    };
-
+    let mut region = Region::new();
     let mut stack = vec![start_pos];
+
     while let Some(cell_pos) = stack.pop() {
         if region.cells.contains_key(&cell_pos) {
             continue;
         }
 
-        let possible_neighbors = [
-            (cell_pos.0 - 1, cell_pos.1),
-            (cell_pos.0 + 1, cell_pos.1),
-            (cell_pos.0, cell_pos.1 - 1),
-            (cell_pos.0, cell_pos.1 + 1),
-        ];
-
-        let fences = Fences {
+        let possible_neighbors = get_neighbors(cell_pos);
+        let cell_fences = Fences {
             top_fence: garden[possible_neighbors[0]] != garden[cell_pos],
             bottom_fence: garden[possible_neighbors[1]] != garden[cell_pos],
             left_fence: garden[possible_neighbors[2]] != garden[cell_pos],
             right_fence: garden[possible_neighbors[3]] != garden[cell_pos],
         };
 
-        region.cells.insert(cell_pos, fences);
+        region.cells.insert(cell_pos, cell_fences);
         stack.extend(
             possible_neighbors
                 .into_iter()
@@ -73,9 +67,63 @@ fn flood_fill_region(garden: &Grid<char>, start_pos: (usize, usize)) -> Region {
     region
 }
 
+fn get_neighbors((x, y): (usize, usize)) -> [(usize, usize); 4] {
+    [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+}
+
 #[derive(Debug)]
 struct Region {
     cells: HashMap<(usize, usize), Fences>,
+}
+
+impl Region {
+    fn new() -> Self {
+        Self {
+            cells: HashMap::new(),
+        }
+    }
+
+    fn area(&self) -> usize {
+        self.cells.len()
+    }
+
+    fn sides_in_grid(&self) -> usize {
+        let mut sides = self.cells.values().map(|f| f.corners()).sum();
+
+        for (pos, fences) in self.cells.iter() {
+            sides += corners_of_diagonal_cells(self, pos, fences);
+        }
+
+        sides
+    }
+}
+
+fn corners_of_diagonal_cells(region: &Region, pos: &(usize, usize), fences: &Fences) -> usize {
+    let mut corners = 0;
+
+    let dia_left = (pos.0 + 1, pos.1 - 1);
+    if let Some(dia_fences) = region.cells.get(&dia_left) {
+        if (region.cells.get(&(pos.0, pos.1 - 1)).is_some()
+            || region.cells.get(&(pos.0 + 1, pos.1)).is_some())
+            && ((fences.left_fence && dia_fences.top_fence)
+                || (fences.bottom_fence && dia_fences.right_fence))
+        {
+            corners += 1;
+        }
+    }
+
+    let dia_right = (pos.0 + 1, pos.1 + 1);
+    if let Some(dia_fences) = region.cells.get(&dia_right) {
+        if (region.cells.get(&(pos.0, pos.1 + 1)).is_some()
+            || region.cells.get(&(pos.0 + 1, pos.1)).is_some())
+            && ((fences.right_fence && dia_fences.top_fence)
+                || (fences.bottom_fence && dia_fences.left_fence))
+        {
+            corners += 1;
+        }
+    }
+
+    corners
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -89,6 +137,7 @@ struct Fences {
 impl Fences {
     fn corners(&self) -> usize {
         let mut corners = 0;
+
         if self.top_fence && self.left_fence {
             corners += 1;
         }
@@ -101,43 +150,8 @@ impl Fences {
         if self.bottom_fence && self.right_fence {
             corners += 1;
         }
+
         corners
-    }
-}
-
-impl Region {
-    fn area(&self) -> usize {
-        self.cells.len()
-    }
-
-    fn sides_in_grid(&self) -> usize {
-        let mut sides = self.cells.values().map(|f| f.corners()).sum();
-
-        for (pos, fences) in self.cells.iter() {
-            let dia_left = (pos.0 + 1, pos.1 - 1);
-            if let Some(dia_fences) = self.cells.get(&dia_left) {
-                if (self.cells.get(&(pos.0, pos.1 - 1)).is_some()
-                    || self.cells.get(&(pos.0 + 1, pos.1)).is_some())
-                    && ((fences.left_fence && dia_fences.top_fence)
-                        || (fences.bottom_fence && dia_fences.right_fence))
-                {
-                    sides += 1;
-                }
-            }
-
-            let dia_right = (pos.0 + 1, pos.1 + 1);
-            if let Some(dia_fences) = self.cells.get(&dia_right) {
-                if (self.cells.get(&(pos.0, pos.1 + 1)).is_some()
-                    || self.cells.get(&(pos.0 + 1, pos.1)).is_some())
-                    && ((fences.right_fence && dia_fences.top_fence)
-                        || (fences.bottom_fence && dia_fences.left_fence))
-                {
-                    sides += 1;
-                }
-            }
-        }
-
-        sides
     }
 }
 
