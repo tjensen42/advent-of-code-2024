@@ -7,7 +7,7 @@ fn process_input(input: &str) -> usize {
     let machines: Vec<Machine> = input.split("\n\n").map(Machine::from).collect();
     machines
         .iter()
-        .filter_map(|machine| machine.min_tokens())
+        .filter_map(|machine| machine.min_tokens_to_win())
         .sum()
 }
 
@@ -19,7 +19,7 @@ struct Machine {
 }
 
 impl Machine {
-    fn min_tokens(&self) -> Option<usize> {
+    fn min_tokens_to_win(&self) -> Option<usize> {
         let mut min_tokens = usize::MAX;
 
         for pa in 0..=100 {
