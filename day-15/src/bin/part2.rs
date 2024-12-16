@@ -3,8 +3,8 @@ use core::panic;
 use grid::Grid;
 
 fn main() {
-    let input = include_str!("../test_input.txt").trim();
-    println!("Part 1: {}", process_input(input));
+    let input = include_str!("../input.txt").trim();
+    println!("Part 2: {}", process_input(input));
 }
 
 fn process_input(input: &str) -> usize {
@@ -14,49 +14,41 @@ fn process_input(input: &str) -> usize {
     let steps = steps.chars().filter(|&c| c != '\n').collect::<Vec<_>>();
     let mut pos = map.indexed_iter().find(|(_, &c)| c == '@').unwrap().0;
 
-    steps
-        .iter()
-        .for_each(|&step| pos = move_robot_and_boxes(&mut map, pos, step));
+    // Print map
+    for row in map.iter_rows() {
+        for c in row {
+            print!("{}", c);
+        }
+        println!();
+    }
+
+    for step in steps {
+        // println!("Step: {}", step);
+        pos = match step {
+            '^' => move_up(&mut map, pos),
+            'v' => move_down(&mut map, pos),
+            '<' => move_left(&mut map, pos),
+            '>' => move_right(&mut map, pos),
+            _ => panic!("Invalid step"),
+        };
+
+        // Print map
+        // for row in map.iter_rows() {
+        //     for c in row {
+        //         print!("{}", c);
+        //     }
+        //     println!();
+        // }
+    }
 
     map.indexed_iter()
         .map(|(pos, &c)| if c == '[' { 100 * pos.0 + pos.1 } else { 0 })
         .sum()
 }
 
-fn move_robot_and_boxes(map: &mut Grid<char>, pos: (usize, usize), step: char) -> (usize, usize) {
-    let moved_pos = |pos: (usize, usize)| -> (usize, usize) {
-        match step {
-            '^' => (pos.0 - 1, pos.1),
-            '>' => (pos.0, pos.1 + 1),
-            'v' => (pos.0 + 1, pos.1),
-            '<' => (pos.0, pos.1 - 1),
-            _ => unreachable!(),
-        }
-    };
-
-    let new_robot_pos = moved_pos(pos);
-    if map[new_robot_pos] == '.' {
-        map[pos] = '.';
-        map[new_robot_pos] = '@';
-        return new_robot_pos;
-    } else if map[new_robot_pos] == 'O' {
-        let mut new_box_pos = moved_pos(new_robot_pos);
-        while map[new_box_pos] == 'O' {
-            new_box_pos = moved_pos(new_box_pos);
-        }
-        if map[new_box_pos] == '.' {
-            map[pos] = '.';
-            map[new_robot_pos] = '@';
-            map[new_box_pos] = 'O';
-            return new_robot_pos;
-        }
-    }
-    pos
-}
-
-fn boxes_can_be_moved_up(map: &Grid<char>, pos: (usize, usize)) -> bool {
-    let mut left;
-    let mut right;
+fn boxes_can_be_moved_vertical(map: &Grid<char>, pos: (usize, usize), dir: isize) -> bool {
+    let left;
+    let right;
 
     if map[pos] == '[' {
         left = pos;
@@ -68,15 +60,25 @@ fn boxes_can_be_moved_up(map: &Grid<char>, pos: (usize, usize)) -> bool {
         panic!("Invalid box position");
     }
 
-    let left_upper = (left.0 - 1, left.1);
-    let right_upper = (right.0 - 1, right.1);
+    let next_left = (left.0.saturating_add_signed(dir), left.1);
+    let next_right = (right.0.saturating_add_signed(dir), right.1);
 
-    map[left_upper] == '.' && map[right_upper] == '.'
+    match (map[next_left], map[next_right]) {
+        ('.', '.') => true,
+        ('[', ']') => boxes_can_be_moved_vertical(map, next_left, dir),
+        (']', '[') => {
+            boxes_can_be_moved_vertical(map, next_left, dir)
+                && boxes_can_be_moved_vertical(map, next_right, dir)
+        }
+        (']', '.') => boxes_can_be_moved_vertical(map, next_left, dir),
+        ('.', '[') => boxes_can_be_moved_vertical(map, next_right, dir),
+        _ => false,
+    }
 }
 
-fn boxes_can_be_moved_down(map: &Grid<char>, pos: (usize, usize)) -> bool {
-    let mut left;
-    let mut right;
+fn move_boxes_vertical(map: &mut Grid<char>, pos: (usize, usize), dir: isize) {
+    let left;
+    let right;
 
     if map[pos] == '[' {
         left = pos;
@@ -88,31 +90,83 @@ fn boxes_can_be_moved_down(map: &Grid<char>, pos: (usize, usize)) -> bool {
         panic!("Invalid box position");
     }
 
-    let left_lower = (left.0 + 1, left.1);
-    let right_lower = (right.0 + 1, right.1);
+    let next_left = (left.0.saturating_add_signed(dir), left.1);
+    let next_right = (right.0.saturating_add_signed(dir), right.1);
 
-    map[left_lower] == '.' && map[right_lower] == '.'
+    match (map[next_left], map[next_right]) {
+        ('.', '.') => {}
+        ('[', ']') => move_boxes_vertical(map, next_left, dir),
+        (']', '[') => {
+            move_boxes_vertical(map, next_left, dir);
+            move_boxes_vertical(map, next_right, dir);
+        }
+        (']', '.') => {
+            move_boxes_vertical(map, next_left, dir);
+        }
+        ('.', '[') => {
+            move_boxes_vertical(map, next_right, dir);
+        }
+        _ => panic!("Invalid map state for moving boxes up"),
+    }
+
+    map[left] = '.';
+    map[right] = '.';
+    map[next_left] = '[';
+    map[next_right] = ']';
 }
 
-fn move_right(map: &mut Grid<char>, pos: (usize, usize)) -> (usize, usize) {
-    let new_pos = (pos.0, pos.1 + 1);
+fn move_up(map: &mut Grid<char>, pos: (usize, usize)) -> (usize, usize) {
+    let dir = -1;
+    let new_pos = (pos.0 - 1, pos.1);
 
     if map[new_pos] == '.' {
         map[pos] = '.';
         map[new_pos] = '@';
         return new_pos;
     } else if map[new_pos] == '[' {
-        let mut new_box_pos = (pos.0, pos.1 + 2);
-        while map[new_box_pos] == '[' {
-            new_box_pos.1 += 2;
-        }
-        if map[new_box_pos] == '.' {
+        if boxes_can_be_moved_vertical(map, new_pos, dir) {
+            move_boxes_vertical(map, new_pos, dir);
             map[pos] = '.';
             map[new_pos] = '@';
-            map[new_box_pos] = '[';
-            map[(new_box_pos.0, new_box_pos.1 + 1)] = ']';
             return new_pos;
         }
+    } else if map[new_pos] == ']' {
+        let box_pos_left = (new_pos.0, new_pos.1 - 1);
+        if boxes_can_be_moved_vertical(map, box_pos_left, dir) {
+            move_boxes_vertical(map, box_pos_left, dir);
+            map[pos] = '.';
+            map[new_pos] = '@';
+            return new_pos;
+        }
+    }
+
+    pos
+}
+
+fn move_down(map: &mut Grid<char>, pos: (usize, usize)) -> (usize, usize) {
+    let dir = 1;
+    let new_pos = (pos.0 + 1, pos.1);
+
+    if map[new_pos] == '.' {
+        map[pos] = '.';
+        map[new_pos] = '@';
+        return new_pos;
+    } else if map[new_pos] == '[' {
+        if boxes_can_be_moved_vertical(map, new_pos, dir) {
+            move_boxes_vertical(map, new_pos, dir);
+            map[pos] = '.';
+            map[new_pos] = '@';
+            return new_pos;
+        }
+    } else if map[new_pos] == ']' {
+        let box_pos_left = (new_pos.0, new_pos.1 - 1);
+        if boxes_can_be_moved_vertical(map, box_pos_left, dir) {
+            move_boxes_vertical(map, box_pos_left, dir);
+            map[pos] = '.';
+            map[new_pos] = '@';
+            return new_pos;
+        }
+    }
 
     pos
 }
@@ -125,15 +179,49 @@ fn move_left(map: &mut Grid<char>, pos: (usize, usize)) -> (usize, usize) {
         map[new_pos] = '@';
         return new_pos;
     } else if map[new_pos] == ']' {
-        let mut new_box_pos = (pos.0, pos.1 - 2);
+        let mut skipped = 0;
+        let mut new_box_pos = new_pos;
         while map[new_box_pos] == ']' {
+            skipped += 1;
             new_box_pos.1 -= 2;
         }
         if map[new_box_pos] == '.' {
             map[pos] = '.';
             map[new_pos] = '@';
-            map[new_box_pos] = ']';
-            map[(new_box_pos.0, new_box_pos.1 - 1)] = '[';
+            for _ in 0..skipped {
+                map[new_box_pos] = '[';
+                map[(new_box_pos.0, new_box_pos.1 + 1)] = ']';
+                new_box_pos.1 += 2;
+            }
+            return new_pos;
+        }
+    }
+
+    pos
+}
+
+fn move_right(map: &mut Grid<char>, pos: (usize, usize)) -> (usize, usize) {
+    let new_pos = (pos.0, pos.1 + 1);
+
+    if map[new_pos] == '.' {
+        map[pos] = '.';
+        map[new_pos] = '@';
+        return new_pos;
+    } else if map[new_pos] == '[' {
+        let mut skipped = 0;
+        let mut new_box_pos = new_pos;
+        while map[new_box_pos] == '[' {
+            skipped += 1;
+            new_box_pos.1 += 2;
+        }
+        if map[new_box_pos] == '.' {
+            map[pos] = '.';
+            map[new_pos] = '@';
+            for _ in 0..skipped {
+                map[new_box_pos] = ']';
+                map[(new_box_pos.0, new_box_pos.1 - 1)] = '[';
+                new_box_pos.1 -= 2;
+            }
             return new_pos;
         }
     }
