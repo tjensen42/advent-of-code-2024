@@ -29,12 +29,16 @@ fn count_tiles_on_best_paths(map: &Grid<char>, start: (usize, usize)) -> usize {
 
     while let Some(reindeer) = stack.pop() {
         if map[reindeer.pos] == 'E' {
-            if reindeer.score < min_score {
-                min_score = reindeer.score;
-                min_score_positions.clear();
-                min_score_positions.extend(reindeer.path);
-            } else if reindeer.score == min_score {
-                min_score_positions.extend(reindeer.path);
+            match reindeer.score.cmp(&min_score) {
+                std::cmp::Ordering::Less => {
+                    min_score = reindeer.score;
+                    min_score_positions.clear();
+                    min_score_positions.extend(reindeer.path);
+                }
+                std::cmp::Ordering::Equal => {
+                    min_score_positions.extend(reindeer.path);
+                }
+                _ => {}
             }
             continue;
         }

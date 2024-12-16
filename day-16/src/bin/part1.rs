@@ -40,8 +40,8 @@ fn find_best_path(map: &Grid<char>, start: (usize, usize)) -> usize {
         cache.insert(reindeer.pos, reindeer.score);
 
         let next = [
-            reindeer.clone().move_left(),
-            reindeer.clone().move_right(),
+            reindeer.move_left(),
+            reindeer.move_right(),
             reindeer.move_straight(),
         ];
 

@@ -45,24 +45,18 @@ fn calculate_antinodes_positions(
     let diff_y = pos1.1 as isize - pos2.1 as isize;
 
     let mut positions = Vec::new();
-    let (mut x, mut y) = (
-        pos1.0 as isize - diff_x as isize,
-        pos1.1 as isize - diff_y as isize,
-    );
+    let (mut x, mut y) = (pos1.0 as isize - diff_x, pos1.1 as isize - diff_y);
     while x >= 0 && x < grid.rows() as isize && y >= 0 && y < grid.cols() as isize {
         positions.push((x as usize, y as usize));
-        x -= diff_x as isize;
-        y -= diff_y as isize;
+        x -= diff_x;
+        y -= diff_y;
     }
 
-    let (mut x, mut y) = (
-        pos2.0 as isize + diff_x as isize,
-        pos2.1 as isize + diff_y as isize,
-    );
+    let (mut x, mut y) = (pos2.0 as isize + diff_x, pos2.1 as isize + diff_y);
     while x >= 0 && x < grid.rows() as isize && y >= 0 && y < grid.cols() as isize {
         positions.push((x as usize, y as usize));
-        x += diff_x as isize;
-        y += diff_y as isize;
+        x += diff_x;
+        y += diff_y;
     }
     positions
 }

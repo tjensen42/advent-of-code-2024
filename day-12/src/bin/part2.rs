@@ -103,8 +103,8 @@ fn corners_of_diagonal_cells(region: &Region, pos: &(usize, usize), fences: &Fen
 
     let dia_left = (pos.0 + 1, pos.1 - 1);
     if let Some(dia_fences) = region.cells.get(&dia_left) {
-        if (region.cells.get(&(pos.0, pos.1 - 1)).is_some()
-            || region.cells.get(&(pos.0 + 1, pos.1)).is_some())
+        if (region.cells.contains_key(&(pos.0, pos.1 - 1))
+            || region.cells.contains_key(&(pos.0 + 1, pos.1)))
             && ((fences.left_fence && dia_fences.top_fence)
                 || (fences.bottom_fence && dia_fences.right_fence))
         {
@@ -114,8 +114,8 @@ fn corners_of_diagonal_cells(region: &Region, pos: &(usize, usize), fences: &Fen
 
     let dia_right = (pos.0 + 1, pos.1 + 1);
     if let Some(dia_fences) = region.cells.get(&dia_right) {
-        if (region.cells.get(&(pos.0, pos.1 + 1)).is_some()
-            || region.cells.get(&(pos.0 + 1, pos.1)).is_some())
+        if (region.cells.contains_key(&(pos.0, pos.1 + 1))
+            || region.cells.contains_key(&(pos.0 + 1, pos.1)))
             && ((fences.right_fence && dia_fences.top_fence)
                 || (fences.bottom_fence && dia_fences.left_fence))
         {

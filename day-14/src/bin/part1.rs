@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use grid::Grid;
 use itertools::Itertools;
 
@@ -29,18 +31,12 @@ fn count_robots_in_quadrant(robots: &[Robot]) -> (usize, usize, usize, usize) {
     for robot in robots {
         let (row, col) = robot.pos;
 
-        if row < mid_row {
-            if col < mid_col {
-                q1 += 1;
-            } else if col > mid_col {
-                q2 += 1;
-            }
-        } else if row > mid_row {
-            if col < mid_col {
-                q3 += 1;
-            } else if col > mid_col {
-                q4 += 1
-            }
+        match (row.cmp(&mid_row), col.cmp(&mid_col)) {
+            (Ordering::Less, Ordering::Less) => q1 += 1,
+            (Ordering::Less, Ordering::Greater) => q2 += 1,
+            (Ordering::Greater, Ordering::Less) => q3 += 1,
+            (Ordering::Greater, Ordering::Greater) => q4 += 1,
+            _ => {}
         }
     }
 

@@ -45,11 +45,10 @@ fn process_input(input: &str) -> usize {
 
     let filesystem = layout
         .iter()
-        .map(|&x| match x {
+        .flat_map(|&x| match x {
             MemBlock::Some(id, size) => vec![id; size],
             MemBlock::None(size) => vec![0; size],
         })
-        .flatten()
         .collect::<Vec<_>>();
 
     let mut sum = 0;
