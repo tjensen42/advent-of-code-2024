@@ -12,8 +12,11 @@ fn process_input(input: &str) -> usize {
         .lines()
         .for_each(|l| map.push_row(l.chars().collect()));
 
-    let start = find_point(&map, 'S').unwrap();
-    map[start] = '.';
+    let start = map
+        .indexed_iter()
+        .find(|(_, &c)| c == 'S')
+        .map(|(pos, _)| pos)
+        .unwrap_or_else(|| panic!("Start position 'S' not found"));
 
     find_best_path(&map, start)
 }
@@ -29,50 +32,26 @@ fn find_best_path(map: &Grid<char>, start: (usize, usize)) -> usize {
             continue;
         }
 
-        if let Some(cached_score) = cache.get_mut(&(reindeer.pos, reindeer.dir)) {
-            if *cached_score > reindeer.score {
-                *cached_score = reindeer.score;
-            } else {
+        if let Some(&cached_score) = cache.get(&reindeer.pos) {
+            if cached_score <= reindeer.score {
                 continue;
             }
-        } else {
-            cache.insert((reindeer.pos, reindeer.dir), reindeer.score);
         }
+        cache.insert(reindeer.pos, reindeer.score);
 
-        let next_positions = get_next_positions(map, &reindeer);
-        stack.extend_from_slice(&next_positions);
+        let next = [
+            reindeer.clone().move_left(),
+            reindeer.clone().move_right(),
+            reindeer.move_straight(),
+        ];
+
+        stack.extend(next.iter().filter(|r| map[r.pos] != '#'));
     }
 
     min_score
 }
 
-fn find_point(map: &Grid<char>, point: char) -> Option<(usize, usize)> {
-    map.indexed_iter()
-        .find(|(_, &c)| c == point)
-        .map(|(pos, _)| pos)
-}
-
-fn get_next_positions(map: &Grid<char>, reindeer: &Reindeer) -> Vec<Reindeer> {
-    let (row, col) = reindeer.pos;
-    let next_positions = [
-        ((row - 1, col), Direction::North),
-        ((row + 1, col), Direction::South),
-        ((row, col - 1), Direction::West),
-        ((row, col + 1), Direction::East),
-    ];
-
-    next_positions
-        .iter()
-        .filter(|(pos, _)| map[*pos] == '.' || map[*pos] == 'E')
-        .map(|&(pos, dir)| Reindeer {
-            pos,
-            dir,
-            score: reindeer.score + reindeer.dir.diff_score(dir) + 1,
-        })
-        .collect()
-}
-
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 struct Reindeer {
     pos: (usize, usize),
     dir: Direction,
@@ -87,27 +66,47 @@ impl Reindeer {
             score: 0,
         }
     }
+
+    fn move_straight(mut self) -> Self {
+        self.pos = match self.dir {
+            Direction::North => (self.pos.0 - 1, self.pos.1),
+            Direction::East => (self.pos.0, self.pos.1 + 1),
+            Direction::South => (self.pos.0 + 1, self.pos.1),
+            Direction::West => (self.pos.0, self.pos.1 - 1),
+        };
+        self.score += 1;
+        self
+    }
+
+    fn move_left(mut self) -> Self {
+        self.dir = match self.dir {
+            Direction::North => Direction::West,
+            Direction::East => Direction::North,
+            Direction::South => Direction::East,
+            Direction::West => Direction::South,
+        };
+        self.score += 1000;
+        self.move_straight()
+    }
+
+    fn move_right(mut self) -> Self {
+        self.dir = match self.dir {
+            Direction::North => Direction::East,
+            Direction::East => Direction::South,
+            Direction::South => Direction::West,
+            Direction::West => Direction::North,
+        };
+        self.score += 1000;
+        self.move_straight()
+    }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 enum Direction {
     North = 0,
     East = 1,
     South = 2,
     West = 3,
-}
-
-impl Direction {
-    fn diff_score(self, other: Direction) -> usize {
-        const SCORES: [[usize; 4]; 4] = [
-            [0, 1000, 2000, 1000], // North
-            [1000, 0, 1000, 2000], // East
-            [2000, 1000, 0, 1000], // South
-            [1000, 2000, 1000, 0], // West
-        ];
-
-        SCORES[self as usize][other as usize]
-    }
 }
 
 #[cfg(test)]
