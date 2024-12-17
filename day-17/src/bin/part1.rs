@@ -4,42 +4,34 @@ fn main() {
 }
 
 fn process_input(input: &str) -> String {
-    let mut instructions = input
+    let input_nums = input
         .split(|c: char| !c.is_ascii_digit())
         .filter_map(|x| x.parse().ok())
         .collect::<Vec<_>>();
 
-    let mut reg_a = instructions.remove(0);
-    let mut reg_b = instructions.remove(0);
-    let mut reg_c = instructions.remove(0);
+    let (mut a, mut b, mut c) = (input_nums[0], input_nums[1], input_nums[2]);
+    let instructions = &input_nums[3..];
     let mut out = String::new();
     let mut pc = 0;
 
-    while let Some(&instruction) = instructions.get(pc) {
+    while pc < instructions.len() - 1 {
+        let instruction = instructions[pc];
         let operand = instructions[pc + 1];
-        let combo_operand = |op: usize| match op {
-            0..=3 => op,
-            4 => reg_a,
-            5 => reg_b,
-            6 => reg_c,
-            _ => panic!("Invalid combo operator."),
-        };
+        let combo = [0, 1, 2, 3, a, b, c];
 
         match instruction {
-            0 => reg_a /= 2_usize.pow(combo_operand(operand) as u32),
-            1 => reg_b ^= operand,
-            2 => reg_b = combo_operand(operand) % 8,
-            3 => {
-                if reg_a != 0 {
-                    pc = operand;
-                    continue;
-                }
+            0 => a /= 2_usize.pow(combo[operand] as u32),
+            1 => b ^= operand,
+            2 => b = combo[operand] % 8,
+            3 if a != 0 => {
+                pc = operand;
+                continue;
             }
-            4 => reg_b ^= reg_c,
-            5 => out.push_str(&format!("{},", combo_operand(operand) % 8)),
-            6 => reg_b = reg_a / 2_usize.pow(combo_operand(operand) as u32),
-            7 => reg_c = reg_a / 2_usize.pow(combo_operand(operand) as u32),
-            _ => panic!("Invalid instruction"),
+            4 => b ^= c,
+            5 => out.push_str(&format!("{},", combo[operand] % 8)),
+            6 => b = a / 2_usize.pow(combo[operand] as u32),
+            7 => c = a / 2_usize.pow(combo[operand] as u32),
+            _ => {}
         }
         pc += 2;
     }
